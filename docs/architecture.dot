@@ -1,0 +1,72 @@
+digraph addback {
+  graph [rankdir=TB, fontname="Arial", bgcolor="white", pad=0.4, nodesep=0.5, ranksep=0.55, newrank=true, ordering=out,
+         label="Addback: corporation tax adjustments review agent on Azure\n ", labelloc=t, fontsize=20];
+  node  [shape=box, style="rounded,filled", fontname="Arial", fontsize=11, fillcolor="#FFFFFF", color="#444444", penwidth=1.2, margin="0.15,0.08"];
+  edge  [fontname="Arial", fontsize=9, color="#555555"];
+
+  user [label="Tax reviewer (associate / senior)", shape=ellipse, fillcolor="#FFF4E0"];
+
+  subgraph cluster_aca {
+    label="Azure Container Apps (scale to zero)"; style="rounded,dashed"; color="#0078D4"; fontcolor="#0078D4"; fontsize=12;
+    ui  [label="Reviewer UI (Streamlit)\naccept / edit / reject each line"];
+    api [label="FastAPI\nupload, pipeline, agent tools, export"];
+  }
+
+  pipe [shape=plain, label=<
+    <TABLE BORDER="1" CELLBORDER="1" CELLSPACING="8" CELLPADDING="8" STYLE="ROUNDED" COLOR="#888888">
+      <TR><TD COLSPAN="5" BORDER="0"><FONT POINT-SIZE="12" COLOR="#333333">Bulk pipeline (fixed order, per ledger)</FONT></TD></TR>
+      <TR>
+        <TD PORT="p1" BGCOLOR="#F2F2F2">1. Rules pre-pass<BR/>no AI: depreciation,<BR/>fines, amortisation</TD>
+        <TD PORT="p2" BGCOLOR="#FDECEC">2. Prompt Shields<BR/>ledger text is<BR/>untrusted input</TD>
+        <TD PORT="p3" BGCOLOR="#E8F1FB">3. Hybrid retrieval<BR/>keyword + vector<BR/>+ semantic ranker</TD>
+        <TD PORT="p4" BGCOLOR="#E8F1FB">4. Classify batch<BR/>structured JSON: treatment,<BR/>amount, reason, citation</TD>
+        <TD PORT="p5" BGCOLOR="#E8F1FB">5. Citation check<BR/>ref exists and passage<BR/>supports the reason</TD>
+      </TR>
+    </TABLE>>];
+
+  agent [label="Review agent (Foundry Agent Service)\nfor \"why?\" and needs-judgement lines\ntools: search_manuals, get_paragraph,\nget_ledger_context, propose_adjustment", fillcolor="#E6F4EA", color="#2E7D32"];
+
+  subgraph cluster_foundry {
+    label="Azure AI Foundry models"; style="rounded"; color="#0078D4"; fontcolor="#0078D4"; fontsize=12;
+    llm [label="Chat model\nGPT-5.x mini (EU Data Zone)\n+ small model for checks"];
+    emb [label="Embeddings\ntext-embedding-3-small\n512 dimensions"];
+  }
+
+  search [label="Azure AI Search\nHMRC manual index\nBIM, CTM, CA\none chunk per paragraph", shape=cylinder, fillcolor="#E8F1FB"];
+  corpus [label="gov.uk HMRC manuals\n(only allowed source)", shape=note];
+  blob   [label="Storage\nBlob: uploads, corpus\nTable: audit log", shape=cylinder, fillcolor="#F2F2F2"];
+
+  subgraph cluster_ops {
+    label="Platform (all in Terraform)"; style="rounded,dashed"; color="#888888"; fontcolor="#333333"; fontsize=12;
+    gh [label="GitHub Actions (OIDC)\nBandit, pip-audit, Trivy,\nsmoke eval, terraform apply"];
+    kv [label="Key Vault +\nmanaged identity"];
+    ai [label="App Insights\nOpenTelemetry +\nFoundry tracing"];
+    cs [label="Content Safety\n(Prompt Shields)", fillcolor="#FDECEC"];
+    budget [label="Budget alert\n£20 / month"];
+  }
+
+  {rank=same; agent; blob;}
+  {rank=same; llm; emb; search; corpus;}
+
+  user -> ui [label=" upload ledger CSV"];
+  ui -> api;
+  api -> pipe:p1:n;
+  pipe -> agent [style=invis];
+  pipe:p5:n -> ui [label=" proposals + confidence", color="#0078D4", fontcolor="#0078D4", constraint=false];
+  ui -> agent [label=" \"why?\"", color="#2E7D32", fontcolor="#2E7D32", constraint=false];
+  agent -> api [label="tool calls", color="#2E7D32", fontcolor="#2E7D32", constraint=false];
+  api -> blob [label=" files, decisions,\n audit log, export", constraint=false];
+
+  pipe:p3:s -> search;
+  pipe:p3:s -> emb [style=dashed];
+  pipe:p4:s -> llm;
+  pipe:p5:s -> llm [style=dashed];
+  agent -> llm [style=dashed, color="#2E7D32"];
+  corpus -> search [label=" scrape, chunk,\n embed, index", style=dashed];
+
+  {rank=same; gh; kv; ai; cs; budget;}
+  emb -> gh [style=invis];
+  llm -> kv [style=invis];
+  search -> ai [style=invis];
+  gh -> kv -> ai -> cs -> budget [style=invis];
+}

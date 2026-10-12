@@ -1,11 +1,25 @@
-# Addback
+# Addback: tax adjustments review agent
 
-**An AI agent that does a first-pass review of a UK company's nominal ledger for corporation tax adjustments, citing HMRC manuals, with a human reviewer approving every line.**
+*Addback is named after the tax term: an add-back is an expense added back to accounts profit because it is not tax-deductible.*
 
-![Status](https://img.shields.io/badge/status-in%20progress-orange)
-![Azure](https://img.shields.io/badge/cloud-Azure-0078D4)
-![Python](https://img.shields.io/badge/python-3.12-blue)
-![Terraform](https://img.shields.io/badge/IaC-Terraform-7B42BC)
+An AI agent that does a first-pass review of a UK company's nominal ledger for corporation tax adjustments. It cites the HMRC manual paragraph behind every proposal, and a human reviewer approves every line.
+
+![Status](https://img.shields.io/badge/Status-In_progress-F97316?style=flat)
+![Python](https://img.shields.io/badge/Python-3.12-3776AB?style=flat&logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688?style=flat&logo=fastapi&logoColor=white)
+![Streamlit](https://img.shields.io/badge/Frontend-Streamlit-FF4B4B?style=flat&logo=streamlit&logoColor=white)
+![Pydantic](https://img.shields.io/badge/Validation-Pydantic-E92063?style=flat&logo=pydantic&logoColor=white)
+![Azure OpenAI](https://img.shields.io/badge/LLM-Azure_OpenAI-0078D4?style=flat)
+![Azure AI Foundry](https://img.shields.io/badge/Agent-Azure_AI_Foundry-0078D4?style=flat)
+![Azure AI Search](https://img.shields.io/badge/Retrieval-Azure_AI_Search-0078D4?style=flat)
+![Content Safety](https://img.shields.io/badge/Safety-Prompt_Shields-0078D4?style=flat)
+![Azure Container Apps](https://img.shields.io/badge/Hosting-Azure_Container_Apps-0078D4?style=flat)
+![Docker](https://img.shields.io/badge/Docker-Containerised-2496ED?style=flat&logo=docker&logoColor=white)
+![Terraform](https://img.shields.io/badge/IaC-Terraform-7B42BC?style=flat&logo=terraform&logoColor=white)
+![GitHub Actions](https://img.shields.io/badge/CI%2FCD-GitHub_Actions-2088FF?style=flat&logo=githubactions&logoColor=white)
+![OpenTelemetry](https://img.shields.io/badge/Observability-OpenTelemetry-425CC7?style=flat&logo=opentelemetry&logoColor=white)
+![Ragas](https://img.shields.io/badge/Evaluation-Ragas-6366F1?style=flat)
+![ChromaDB](https://img.shields.io/badge/Baseline-ChromaDB-FFB000?style=flat)
 
 > **Status (October 2026):** design complete, build in progress. This README is updated as each milestone lands. Results tables are placeholders until the evaluation runs.
 
@@ -39,6 +53,8 @@ When preparing a UK company's corporation tax computation, tax staff go line by 
 
 More detail: [docs/research-brief.md](docs/research-brief.md).
 
+---
+
 ## What Addback does
 
 1. Takes a nominal ledger or trial balance export (CSV).
@@ -52,6 +68,8 @@ More detail: [docs/research-brief.md](docs/research-brief.md).
 
 Nothing is final without a human decision. This follows HMRC's January 2026 guidance on generative AI in tax software: transparent, legally grounded, human-supervised, secure and ethical.
 
+---
+
 ## Architecture
 
 ![Addback architecture](docs/architecture.png)
@@ -61,23 +79,50 @@ Nothing is final without a human decision. This follows HMRC's January 2026 guid
 
 Full design: [docs/design-doc.md](docs/design-doc.md).
 
+---
+
 ## Tech stack
 
-| Layer | Technology |
+### AI and retrieval
+| Technology | Purpose |
 |---|---|
-| LLM and agent | Azure OpenAI (GPT-5.x mini) via Azure AI Foundry, Foundry Agent Service |
-| Embeddings | text-embedding-3-small (512 dimensions) |
-| Retrieval | Azure AI Search: hybrid keyword and vector search, semantic ranker |
-| Safety | Azure AI Content Safety (Prompt Shields), structured outputs with Pydantic validation |
-| Backend | Python, FastAPI |
-| Front end | Streamlit reviewer app |
-| Hosting | Azure Container Apps (scale to zero), Azure Container Registry |
-| Data | Azure Blob Storage (uploads, corpus), Azure Table Storage (audit log) |
-| Identity and secrets | Managed identity, Azure Key Vault |
-| Infrastructure as code | Terraform |
-| CI/CD | GitHub Actions with OIDC, Bandit, pip-audit, Trivy, smoke evaluation |
-| Observability | Application Insights, OpenTelemetry, Foundry tracing |
-| Evaluation | Ragas, custom classification and citation metrics, ChromaDB baseline |
+| [Azure OpenAI (GPT-5.x mini)](https://learn.microsoft.com/azure/ai-services/openai/) | Line classification, reasons and add-back amounts |
+| [Azure AI Foundry Agent Service](https://learn.microsoft.com/azure/ai-foundry/) | Review agent that explains decisions and investigates ambiguous lines |
+| [OpenAI text-embedding-3-small](https://platform.openai.com/docs/guides/embeddings) | Embeddings (512 dimensions) |
+| [Azure AI Search](https://learn.microsoft.com/azure/search/) | Hybrid keyword and vector search with semantic ranker |
+| [Azure AI Content Safety](https://learn.microsoft.com/azure/ai-services/content-safety/) | Prompt Shields check on every ledger description |
+| [Pydantic](https://docs.pydantic.dev/) | Structured output validation |
+
+### Application
+| Technology | Purpose |
+|---|---|
+| [Python 3.12](https://www.python.org/) | Language |
+| [FastAPI](https://fastapi.tiangolo.com/) | API: upload, pipeline, agent tools, export |
+| [Streamlit](https://streamlit.io/) | Reviewer app |
+
+### Infrastructure
+| Technology | Purpose |
+|---|---|
+| [Azure Container Apps](https://learn.microsoft.com/azure/container-apps/) | Hosting (scale to zero) |
+| [Azure Container Registry](https://learn.microsoft.com/azure/container-registry/) | Container images |
+| [Docker](https://www.docker.com/) | Containerisation |
+| [Azure Blob Storage](https://learn.microsoft.com/azure/storage/blobs/) | Ledger uploads and the HMRC manual corpus |
+| [Azure Table Storage](https://learn.microsoft.com/azure/storage/tables/) | Audit log |
+| [Managed identity](https://learn.microsoft.com/entra/identity/managed-identities-azure-resources/) | Service-to-service auth without keys |
+| [Azure Key Vault](https://learn.microsoft.com/azure/key-vault/) | Secrets |
+| [Terraform](https://www.terraform.io/) | Infrastructure as code for all Azure resources |
+| [GitHub Actions](https://github.com/features/actions) | CI/CD with OIDC and a smoke evaluation |
+| [Bandit](https://bandit.readthedocs.io/), [pip-audit](https://pypi.org/project/pip-audit/), [Trivy](https://trivy.dev/) | Security gates in CI |
+
+### Evaluation and observability
+| Technology | Purpose |
+|---|---|
+| [Ragas](https://ragas.io/) | RAG evaluation, alongside custom classification and citation metrics |
+| [ChromaDB](https://www.trychroma.com/) | Self-built retrieval baseline |
+| [Application Insights](https://learn.microsoft.com/azure/azure-monitor/app/app-insights-overview) | Logs and metrics |
+| [OpenTelemetry](https://opentelemetry.io/) | Tracing, including Foundry agent traces |
+
+---
 
 ## Design decisions
 
@@ -85,12 +130,14 @@ Each decision is logged as Decision, Options, Choice, Why, Trade-offs in [docs/d
 
 | Decision | Choice | Why |
 |---|---|---|
-| Core pattern | Fixed pipeline for bulk lines, agent for review | Agents earn their place only where the path is unknown |
+| Core pattern | Fixed pipeline for bulk lines, agent for review | An agent is only needed where the path is not known in advance |
 | Rules before AI | Deterministic tags for certain items | No model cost or risk where the answer is fixed |
 | Model and region | GPT-5.x mini, EU Data Zone, model names as Terraform variables | GPT-4.1 family retires October 2026; availability changes often |
 | Search tier | Free for development, Basic only for the evaluation week | Semantic ranker needs Basic; keeps cost low |
 | Chunking | One chunk per HMRC manual paragraph | Citations map to a paragraph ID and can be checked deterministically |
 | Prompt injection | Prompt Shields, data delimiting, tools cannot finalise | Ledger descriptions are free text from client systems |
+
+---
 
 ## Evaluation
 
@@ -108,6 +155,8 @@ Synthetic ledgers only. No client data.
 
 **Managed vs self-built retrieval:** the same question set and ledgers run against Azure AI Search (hybrid, with and without semantic ranker) and a ChromaDB plus BM25 baseline. Comparison covers quality, setup time, monthly cost, control and debuggability.
 
+---
+
 ## Security and responsible AI
 
 - Retrieval restricted to gov.uk HMRC manuals. No web search.
@@ -116,6 +165,8 @@ Synthetic ledgers only. No client data.
 - Managed identity instead of keys; secrets in Key Vault.
 - Security gates in CI: Bandit, pip-audit, Trivy.
 - Audit log of every reviewer decision.
+
+---
 
 ## Roadmap
 
@@ -133,10 +184,12 @@ Synthetic ledgers only. No client data.
 - [ ] Full evaluation and ChromaDB comparison
 - [ ] Demo video and write-up
 
+---
+
 ## Repo structure
 
 ```
-addback/
+tax-adjustments-review-agent/
 ├── app/
 │   ├── api/          FastAPI: upload, pipeline, agent tools, export
 │   ├── pipeline/     rules, retrieval, classification, citation check
@@ -156,6 +209,8 @@ addback/
 └── README.md
 ```
 
+---
+
 ## Getting started
 
 Setup instructions will be added once the first deployable version lands. Planned flow:
@@ -174,16 +229,14 @@ make dev
 make eval
 ```
 
+---
+
 ## Git workflow
 
 ```bash
-# First push (new repo)
-git init
-git add .
-git commit -m "Initial commit: design, architecture and repo skeleton"
-git branch -M main
-git remote add origin https://github.com/seyiabello/addback.git
-git push -u origin main
+# Clone
+git clone https://github.com/seyiabello/tax-adjustments-review-agent.git
+cd tax-adjustments-review-agent
 
 # Day-to-day
 git checkout -b feature/<name>
@@ -192,6 +245,8 @@ git commit -m "<what changed>"
 git push -u origin feature/<name>
 # open a pull request on GitHub, let CI pass, then merge
 ```
+
+---
 
 ## Author
 
